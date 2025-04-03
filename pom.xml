@@ -79,6 +79,10 @@
 			<artifactId>aws-java-sdk-s3</artifactId>
 			<version>1.12.360</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

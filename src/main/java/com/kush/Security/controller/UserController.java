@@ -3,6 +3,7 @@ package com.kush.Security.controller;
 import com.amazonaws.services.s3.AmazonS3;
 import com.kush.Security.Service.UserService;
 import com.kush.Security.model.UserEntity;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,4 +68,37 @@ public class UserController {
         response.put("imageUrl", imageUrl);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    @PatchMapping("/edit/{username}")
+    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable String username, @RequestBody UserEntity user) {
+        Map<String, Object> response = new HashMap<>();
+
+        UserEntity updatedUser = userService.updateUserProfile(username, user);
+
+        response.put("returnCode", 200);
+        response.put("ReturnObject", updatedUser);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{username}")
+    @PreAuthorize("hasRole('ADMIN') or #username == authentication.name")
+    public ResponseEntity<Map<String , Object>> deleteUser(@PathVariable String username){
+        Map<String , Object> response = new HashMap<>();
+        userService.deleteUser(username);
+        response.put("returnCode", 200);
+        response.put("ReturnObject", "User deleted successfully");
+        return new ResponseEntity<>(response , HttpStatus.OK);
+    }
+
+
+
+
+
+
+
+
 }
+
+
+

@@ -4,6 +4,7 @@ import com.kush.Security.filters.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -51,7 +52,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/register/user", "/api/login").permitAll() // Public routes
                         .requestMatchers("/api/users").hasRole("ADMIN") // Only Admins can access all users
                         .requestMatchers("/api/users/{username}").authenticated() // Only authenticated users can access profiles
+                        .requestMatchers(HttpMethod.PATCH, "/api/edit/{username}").authenticated()
                         .requestMatchers("/api/users/uploadProfilePicture").authenticated()
+                        .requestMatchers("/api/delete/{username}").authenticated()
                         .anyRequest().authenticated()) // All other requests need authentication
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

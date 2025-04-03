@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -31,6 +32,9 @@ public class UserService {
         this.userRepo = userRepo;
         this.amazonS3Client = amazonS3Client;
     }
+
+
+
 
     public UserEntity addUser(UserEntity user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -73,6 +77,41 @@ public class UserService {
         return convertedFile;
     }
 
+
+    public UserEntity updateUserProfile(String userName, UserEntity user) {
+        Optional<UserEntity> existingUser = userRepo.findByUserName(userName);
+
+        if (existingUser.isEmpty()) {
+            throw new UserNotFoundException("User not found with username: " + userName);
+        }
+
+        UserEntity userEntity = existingUser.get(); // Extract the actual user object
+
+        // Update fields only if they are not null
+        if (user.getUserName() != null) {
+            userEntity.setUserName(user.getUserName());
+        }
+
+        if (user.getEmail() != null) {
+            userEntity.setEmail(user.getEmail());
+        }
+
+        if (user.getPassword() != null) {
+            userEntity.setPassword(user.getPassword());
+        }
+
+        // Save the updated user back to the database
+        return userRepo.save(userEntity);
+    }
+
+    public void deleteUser(String username) {
+        Optional<UserEntity> user = userRepo.findByUserName(username);
+        if (user.isPresent()) {
+            userRepo.delete(user.get());
+        } else {
+            throw new UserNotFoundException("User not found with username: " + username);
+        }
+    }
 
 
 }
