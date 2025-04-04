@@ -55,6 +55,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/edit/{username}").authenticated()
                         .requestMatchers("/api/users/uploadProfilePicture").authenticated()
                         .requestMatchers("/api/delete/{username}").authenticated()
+                        .requestMatchers("/api/logout").authenticated()
+
                         .anyRequest().authenticated()) // All other requests need authentication
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

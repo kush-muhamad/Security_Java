@@ -1,19 +1,21 @@
 package com.kush.Security.controller;
 
+import com.kush.Security.Service.InvalidTokenService;
 import com.kush.Security.Service.JwtService;
+import com.kush.Security.Service.ResponseService;
 import com.kush.Security.Service.UserService;
 import com.kush.Security.exceptions.InvalidCredentialsException;
 import com.kush.Security.model.UserEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +27,14 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
+    @Autowired
+    private  ResponseService responseService;
+
+    @Autowired
+    private InvalidTokenService invalidTokenService;
+
+
+
 
     public  AuthController(UserService userService , AuthenticationManager authenticationManager ,JwtService jwtService){
         this.userService = userService;
@@ -35,11 +45,10 @@ public class AuthController {
     @PostMapping("/register/user")
     // http://localhost:4000/api/register/user
     public ResponseEntity<Map<String , Object>> registerUser( @RequestBody UserEntity user) {
-        Map<String, Object> response = new HashMap<>();
+
         UserEntity newUser = userService.addUser(user);
-        response.put("returnCode", 201);
-        response.put("ReturnObject", newUser);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+       return  responseService.createResponse(200,newUser,HttpStatus.OK);
+
     }
 
     @PostMapping("/login")
@@ -49,14 +58,26 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPassword()));
 
         if (authentication.isAuthenticated()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("returnCode", 200);
-            response.put("ReturnObject", jwtService.generateToken(user.getUserName()));
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            String token = jwtService.generateToken(user.getUserName());
+            return responseService.createResponse(200,token,HttpStatus.OK);
+
         } else {
             throw new InvalidCredentialsException("Invalid username or password");
         }
     }
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);  // Extract the token
+
+        // Get the token expiration date from the JwtService (or generate it as needed)
+        Date expirationDate = jwtService.extractExpiration(token); // Assuming this method exists
+
+        // Revoke the token
+        invalidTokenService.revokeToken(token, expirationDate);
+
+        return responseService.createResponse(200, "Logged Out",HttpStatus.OK);
+    }
+
 
 
 }

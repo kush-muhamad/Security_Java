@@ -1,5 +1,6 @@
 package com.kush.Security.filters;
 
+import com.kush.Security.Service.InvalidTokenService;
 import com.kush.Security.Service.JwtService;
 import com.kush.Security.Service.MyUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -26,10 +27,13 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
-    JwtService jwtService;
+     private JwtService jwtService;
 
     @Autowired
-    MyUserDetailsService userDetailsService;
+     private MyUserDetailsService userDetailsService;
+
+    @Autowired
+    private InvalidTokenService invalidTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -55,6 +59,10 @@ public class JwtFilter extends OncePerRequestFilter {
                 userDetails = userDetailsService.loadUserByUsername(userName);
             } catch (UsernameNotFoundException e) {
                 response.setStatus(HttpStatus.FORBIDDEN.value());
+                return;
+            }
+            if (invalidTokenService.isTokenRevoked(token)) {
+                response.setStatus(HttpStatus.FORBIDDEN.value());  // Token is revoked, reject the request
                 return;
             }
 
