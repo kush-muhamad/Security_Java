@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.kush.Security.Repo.UserRepo;
 import com.kush.Security.exceptions.UserNotFoundException;
+import com.kush.Security.model.Role;
 import com.kush.Security.model.UserEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,6 +39,12 @@ public class UserService {
 
     public UserEntity addUser(UserEntity user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+
+        if (userRepo.count() == 0) {
+            user.setRole(Role.ADMIN);
+        } else {
+            user.setRole(Role.USER);
+        }
         return userRepo.save(user);
     }
 
@@ -97,7 +104,7 @@ public class UserService {
         }
 
         if (user.getPassword() != null) {
-            userEntity.setPassword(user.getPassword());
+            userEntity.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         }
 
         // Save the updated user back to the database

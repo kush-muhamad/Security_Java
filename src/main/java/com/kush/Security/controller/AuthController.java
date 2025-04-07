@@ -1,5 +1,6 @@
 package com.kush.Security.controller;
 
+import com.kush.Security.Repo.UserRepo;
 import com.kush.Security.Service.InvalidTokenService;
 import com.kush.Security.Service.JwtService;
 import com.kush.Security.Service.ResponseService;
@@ -14,10 +15,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -32,8 +33,8 @@ public class AuthController {
 
     @Autowired
     private InvalidTokenService invalidTokenService;
-
-
+    @Autowired
+    private UserRepo userRepo;
 
 
     public  AuthController(UserService userService , AuthenticationManager authenticationManager ,JwtService jwtService){
@@ -49,6 +50,7 @@ public class AuthController {
         UserEntity newUser = userService.addUser(user);
        return  responseService.createResponse(200,newUser,HttpStatus.OK);
 
+
     }
 
     @PostMapping("/login")
@@ -59,7 +61,14 @@ public class AuthController {
 
         if (authentication.isAuthenticated()) {
             String token = jwtService.generateToken(user.getUserName());
-            return responseService.createResponse(200,token,HttpStatus.OK);
+            Optional<UserEntity> authenticatedUser = userRepo.findByUserName(user.getUserName());
+            Map<String, Object> response = new HashMap<>();
+            response.put("username", authenticatedUser.get().getUserName()); // Add the username
+            response.put("email", authenticatedUser.get().getEmail()); // Add email or any other details you need
+            response.put("role", authenticatedUser.get().getRole()); // Add the user's role (you can add more details here)
+            response.put("imageUrl", authenticatedUser.get().getImageUrl()); //
+            response.put("token", token); // Add the token
+            return responseService.createResponse(200,response,HttpStatus.OK);
 
         } else {
             throw new InvalidCredentialsException("Invalid username or password");
@@ -70,7 +79,7 @@ public class AuthController {
         String token = authHeader.substring(7);  // Extract the token
 
         // Get the token expiration date from the JwtService (or generate it as needed)
-        Date expirationDate = jwtService.extractExpiration(token); // Assuming this method exists
+        Date expirationDate = jwtService.extractExpiration(token);
 
         // Revoke the token
         invalidTokenService.revokeToken(token, expirationDate);

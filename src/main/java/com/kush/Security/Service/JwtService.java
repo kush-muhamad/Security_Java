@@ -22,7 +22,8 @@ public class JwtService {
 
     // Get the Key object from the SECRET
     private Key getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET); // Decode the Base64 secret
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET);// Decode the Base64 secret
+        System.out.println(keyBytes); // [B@1f26fdd
         return Keys.hmacShaKeyFor(keyBytes); // Generate the key
     }
 
